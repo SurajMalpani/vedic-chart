@@ -582,8 +582,8 @@ footer {
           <div class="chart-tools">
             <div class="num-toggle" role="group" aria-label="Numbers shown in chart">
               <span>Numbers</span>
-              <button type="button" data-mode="house" class="active" onclick="setNumMode('house')">House</button>
-              <button type="button" data-mode="sign" onclick="setNumMode('sign')">Sign</button>
+              <button type="button" data-mode="sign" class="active" onclick="setNumMode('sign')">Sign</button>
+              <button type="button" data-mode="house" onclick="setNumMode('house')">House</button>
             </div>
             <button type="button" class="btn-gen" id="dlBtn" onclick="downloadKundli()">
               <span>↓</span>
@@ -1544,7 +1544,7 @@ function reset() {
 // ══════════════════════════════════════════════
 
 let lastChart = null;          // set by generate(); used to redraw and to export
-let chartNumMode = 'house';    // 'house' → 1–12 from Lagna, 'sign' → rashi number (1 = Aries)
+let chartNumMode = 'sign';     // 'sign' (default) → rashi number (1 = Aries), 'house' → 1–12 from Lagna
 
 function setNumMode(mode) {
   chartNumMode = mode;
