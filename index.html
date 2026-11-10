@@ -1,13 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-PRH4V565PH"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-PRH4V565PH', { content_group: 'vedic-chart' });
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vedic Kundali — Birth Chart Generator</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230E0B07'/%3E%3Cdefs%3E%3Cmask id='c'%3E%3Crect width='64' height='64' fill='%23fff'/%3E%3Ccircle cx='25' cy='27' r='19' fill='%23000'/%3E%3C/mask%3E%3C/defs%3E%3Ccircle cx='33' cy='32' r='21' fill='%23D2AA50' mask='url(%23c)'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&family=Tiro+Devanagari+Sanskrit:ital@0;1&display=swap" rel="stylesheet">
 
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -323,8 +331,10 @@ h1 span { color: var(--gold); font-style: italic; }
   max-width: 460px; margin: 0.9rem auto 0;
   display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;
 }
-.chart-tools .btn-reset { padding: 8px 1.1rem; }
-.chart-tools .btn-reset:disabled { opacity: 0.5; cursor: wait; }
+.chart-tools .btn-gen { padding: 11px 1.8rem; font-size: 1rem; box-shadow: 0 6px 20px rgba(232,148,58,0.18); }
+.chart-tools .btn-gen:disabled { cursor: wait; }
+.btn-gen .btn-tag { font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.12em; padding: 2px 5px; border: 1px solid rgba(14,11,7,0.35); border-radius: 2px; }
+@media (max-width: 480px) { .chart-tools { justify-content: center; } .chart-tools .btn-gen { width: 100%; justify-content: center; } }
 .num-toggle {
   display: inline-flex; align-items: center;
   font-family: 'DM Mono', monospace; font-size: 0.62rem;
@@ -418,6 +428,15 @@ h1 span { color: var(--gold); font-style: italic; }
 .house-table .h-lord { color: var(--text-dim); font-size: 0.76rem; }
 .house-table .h-planets { color: var(--amber); }
 .house-table .h-meaning { color: var(--text-faint); font-size: 0.72rem; font-style: italic; }
+
+/* Devanagari */
+.dev { font-family: 'Tiro Devanagari Sanskrit', 'Noto Sans Devanagari', 'Nirmala UI', 'Mangal', serif; font-style: normal; letter-spacing: 0; }
+.san .dev, .p-san.dev, .h-san .dev { font-size: 1.12em; color: #B08A3E; }
+.p-san.dev { font-style: normal; line-height: 1.35; margin-top: 2px; }
+.lagna-value { text-align: right; }
+.lagna-row { gap: 10px; }
+.p-name .dev, .ref-card-name .dev { font-size: 0.82em; color: var(--gold-dim); margin-left: 4px; }
+.pg-value .san { display: block; }
 
 /* Sanskrit sub-labels */
 .san { display: block; font-size: 0.65rem; color: var(--gold-dim); font-style: italic; letter-spacing: 0.04em; line-height: 1.2; margin-top: 1px; font-family: 'Crimson Pro', serif; }
@@ -566,7 +585,10 @@ footer {
               <button type="button" data-mode="house" class="active" onclick="setNumMode('house')">House</button>
               <button type="button" data-mode="sign" onclick="setNumMode('sign')">Sign</button>
             </div>
-            <button type="button" class="btn-reset" id="dlBtn" onclick="downloadKundli()">↓ Download Kundli</button>
+            <button type="button" class="btn-gen" id="dlBtn" onclick="downloadKundli()">
+              <span>↓</span>
+              <span id="dlTxt">Download Kundli <span class="btn-tag">PDF</span></span>
+            </button>
           </div>
         </div>
 
@@ -748,6 +770,40 @@ const TITHI_NAMES = [
 
 const VARA_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 const VARA_LORDS = ["Sun","Moon","Mars","Mercury","Jupiter","Venus","Saturn"];
+
+// ══════════════════════════════════════════════
+//  DEVANAGARI NAME MAPS
+// ══════════════════════════════════════════════
+
+const DEV_PLANET = {
+  Sun:"सूर्य", Moon:"चन्द्र", Mars:"मंगल", Mercury:"बुध", Jupiter:"गुरु",
+  Venus:"शुक्र", Saturn:"शनि", Rahu:"राहु", Ketu:"केतु"
+};
+// Traditional two-letter chart abbreviations
+const DEV_ABBR = {
+  Sun:"सू", Moon:"चं", Mars:"मं", Mercury:"बु", Jupiter:"गु",
+  Venus:"शु", Saturn:"श", Rahu:"रा", Ketu:"के"
+};
+const DEV_SIGN = ["मेष","वृषभ","मिथुन","कर्क","सिंह","कन्या","तुला","वृश्चिक","धनु","मकर","कुम्भ","मीन"];
+const DEV_NAK = [
+  "अश्विनी","भरणी","कृत्तिका","रोहिणी","मृगशिरा","आर्द्रा","पुनर्वसु","पुष्य","आश्लेषा",
+  "मघा","पूर्वाफाल्गुनी","उत्तराफाल्गुनी","हस्त","चित्रा","स्वाती","विशाखा","अनुराधा","ज्येष्ठा",
+  "मूल","पूर्वाषाढा","उत्तराषाढा","श्रवण","धनिष्ठा","शतभिषा","पूर्वाभाद्रपदा","उत्तराभाद्रपदा","रेवती"
+];
+const DEV_HOUSE = ["तनु भाव","धन भाव","सहज भाव","सुख भाव","पुत्र भाव","शत्रु भाव",
+  "कलत्र भाव","आयु भाव","धर्म भाव","कर्म भाव","लाभ भाव","व्यय भाव"];
+const DEV_VARA = ["रविवार","सोमवार","मंगलवार","बुधवार","गुरुवार","शुक्रवार","शनिवार"];
+const DEV_TITHI = ["प्रतिपदा","द्वितीया","तृतीया","चतुर्थी","पञ्चमी","षष्ठी","सप्तमी","अष्टमी",
+  "नवमी","दशमी","एकादशी","द्वादशी","त्रयोदशी","चतुर्दशी","पूर्णिमा"];
+const DEV_PAKSHA = { Shukla:"शुक्ल पक्ष", Krishna:"कृष्ण पक्ष" };
+const DEV_YOGA = ["विष्कम्भ","प्रीति","आयुष्मान्","सौभाग्य","शोभन","अतिगण्ड","सुकर्मा","धृति","शूल",
+  "गण्ड","वृद्धि","ध्रुव","व्याघात","हर्षण","वज्र","सिद्धि","व्यतीपात","वरीयान्","परिघ",
+  "शिव","सिद्ध","साध्य","शुभ","शुक्ल","ब्रह्म","इन्द्र","वैधृति"];
+const DEV_KARANA = ["बव","बालव","कौलव","तैतिल","गर","वणिज","विष्टि","शकुनि","चतुष्पद","नाग","किंस्तुघ्न"];
+const devNum = n => String(n).replace(/\d/g, d => "०१२३४५६७८९"[d]);
+const devTithi = idx => idx === 29 ? "अमावस्या" : DEV_TITHI[idx === 14 ? 14 : idx % 15];
+// Sanskrit sub-label: optional romanised name · Devanagari
+const SD = (rom, dev) => `<span class="san">${rom ? rom + ' · ' : ''}<span class="dev">${dev}</span></span>`;
 
 // ══════════════════════════════════════════════
 //  GEOCODING
@@ -1087,6 +1143,7 @@ function nakshatra(sidLong) {
 */
 
 const KUNDALI_SZ = 460;
+const DEV_FONT = "'Tiro Devanagari Sanskrit', 'Noto Sans Devanagari', 'Nirmala UI', 'Mangal', serif";
 
 const PLANET_ABBR = {
   Sun:"Su", Moon:"Mo", Mars:"Ma", Mercury:"Me", Jupiter:"Ju",
@@ -1127,7 +1184,7 @@ function planetSlots(L, n) {
     for (let i = 0; i < n; i++) {
       const col = cols === 2 ? (i % 2) : 0, row = cols === 2 ? Math.floor(i / 2) : i;
       slots.push({
-        x: L.cx + (cols === 2 ? (col === 0 ? -30 : 30) : 0),
+        x: L.cx + (cols === 2 ? (col === 0 ? -36 : 36) : 0),
         y: L.cy + (row - (rows - 1) / 2) * lh,
       });
     }
@@ -1138,7 +1195,7 @@ function planetSlots(L, n) {
     for (let i = 0; i < n; i++) {
       const col = cols === 2 ? (i % 2) : 0, row = cols === 2 ? Math.floor(i / 2) : i;
       slots.push({
-        x: L.cx + (cols === 2 ? (col === 0 ? -30 : 30) : 0),
+        x: L.cx + (cols === 2 ? (col === 0 ? -36 : 36) : 0),
         y: L.cy + dir * row * lh,
       });
     }
@@ -1173,8 +1230,8 @@ function drawKundali(houseData, planets) {
       stroke: 'none',
     });
     const t = document.createElementNS(ns, 'title');
-    t.textContent = `House ${i+1} · ${hd.sign} (${SAN_SIGN[hd.signIdx]}) · Lord ${hd.lord}` +
-      (hd.planets.length ? ' · ' + hd.planets.map(pl => pl.name).join(', ') : '');
+    t.textContent = `House ${i+1} (${DEV_HOUSE[i]}) · ${hd.sign} (${SAN_SIGN[hd.signIdx]} · ${DEV_SIGN[hd.signIdx]}) · Lord ${hd.lord} (${DEV_PLANET[hd.lord]})` +
+      (hd.planets.length ? ' · ' + hd.planets.map(pl => `${pl.name} (${DEV_PLANET[pl.name]})`).join(', ') : '');
     p.appendChild(t);
   });
 
@@ -1198,9 +1255,20 @@ function drawKundali(houseData, planets) {
       fill: i === 0 ? 'rgba(230,190,90,0.95)' : 'rgba(210,170,80,0.6)',
     }, chartNumMode === 'sign' ? hd.signIdx + 1 : i + 1);
 
+    // Sign name in Devanagari, just outside the number
+    const [nx, ny] = L.num;
+    const sp = L.kind === 'kite'
+      ? (i === 0 ? [nx, ny - 15] : i === 6 ? [nx, ny + 15] : i === 3 ? [nx - 25, ny] : [nx + 25, ny])
+      : L.kind === 'top' ? [nx, ny - 14] : L.kind === 'bottom' ? [nx, ny + 14] : [nx, ny + 13];
+    el('text', {
+      x: sp[0], y: sp[1], 'text-anchor':'middle', 'dominant-baseline':'central',
+      'font-family': DEV_FONT, 'font-size': 10,
+      fill: i === 0 ? 'rgba(230,190,90,0.85)' : 'rgba(210,170,80,0.5)',
+    }, DEV_SIGN[hd.signIdx]);
+
     const pls = hd.planets;
     const slots = planetSlots(L, pls.length);
-    const fs = pls.length > 5 ? 11 : 13.5;
+    const fs = pls.length > 4 ? 10.5 : pls.length > 2 ? 12 : 13.5;
     pls.forEach((pl, j) => {
       const deg = Math.floor(parseFloat(pl.degInSign));
       const isNode = pl.name === 'Rahu' || pl.name === 'Ketu';
@@ -1209,11 +1277,18 @@ function drawKundali(houseData, planets) {
         'font-family':'Crimson Pro, serif', 'font-size': fs, 'font-weight':600,
         fill: PLANET_COLORS[pl.name] || '#E8D8B0',
       });
-      txt.appendChild(document.createTextNode(PLANET_ABBR[pl.name] || pl.name.slice(0,2)));
+      txt.appendChild(document.createTextNode((PLANET_ABBR[pl.name] || pl.name.slice(0,2)) + ' '));
+      const dv = document.createElementNS(ns, 'tspan');
+      dv.setAttribute('font-family', DEV_FONT);
+      dv.setAttribute('font-weight', 400);
+      dv.setAttribute('font-size', fs - 1);
+      dv.textContent = DEV_ABBR[pl.name];
+      txt.appendChild(dv);
       if (pl.retro && !isNode) {
         const r = document.createElementNS(ns, 'tspan');
         r.setAttribute('font-size', fs - 3);
         r.setAttribute('dy', '-0.35em');
+        r.setAttribute('dx', 1.5);
         r.textContent = '℞';
         txt.appendChild(r);
       }
@@ -1233,6 +1308,10 @@ function drawKundali(houseData, planets) {
     'font-family':'IM Fell English, serif', 'font-size': 10,
     fill:'rgba(210,170,80,0.65)', 'letter-spacing': 2,
   }, 'LAGNA');
+  el('text', {
+    x: sz/2, y: 43, 'text-anchor':'middle', 'font-family': DEV_FONT, 'font-size': 10,
+    fill:'rgba(210,170,80,0.55)',
+  }, 'लग्न');
 }
 
 // ══════════════════════════════════════════════
@@ -1371,58 +1450,52 @@ async function generate() {
       houseData, planets: planetList, name, dob,
       details: `${dy.toString().padStart(2,'0')}/${mo.toString().padStart(2,'0')}/${yr} · ${hr.toString().padStart(2,'0')}:${mn.toString().padStart(2,'0')} · ${geoInfo.label}`,
       summary: `Lagna ${RASHIS[ascSign]} · Moon ${RASHIS[signOf(moonS)]} (${moonNk.name} ${moonNk.pada}) · Sun ${RASHIS[signOf(sunS)]}`,
+      // extra data for the PDF export
+      jd, tob, utcOff, lat: geoInfo.lat, lon: geoInfo.lon, place: geoInfo.label,
+      dateStr: `${dy.toString().padStart(2,'0')}/${mo.toString().padStart(2,'0')}/${yr}`,
+      ayanamsa: lahiriAyanamsa(jd), ascLong: ascS, ascSign, ascNk, moonLong: moonS, moonNk,
+      moonSign: signOf(moonS), sunSign: signOf(sunS), westSun: signOf(sunT), weekday,
+      tithi: tithiName, paksha: paksha.split(' ')[0], yoga: YOGA_NAMES[yogaIdx],
+      karana: KARANA_NAMES[karanaIdx], dayLord: VARA_LORDS[weekday],
+      tithiIdx, yogaIdx, karanaIdx,
     };
     drawKundali(houseData, planetList);
 
     // Lagna info
-    document.getElementById('lagnaInfo').innerHTML = `
-      <div class="lagna-row">
-        <span class="lagna-label">Ascendant<span class="san">Lagna</span></span>
-        <span class="lagna-value">${RASHIS[ascSign]}<span class="san">${SAN_SIGN[ascSign]}</span></span>
-      </div>
-      <div class="lagna-row">
-        <span class="lagna-label">Lagna Nakshatra<span class="san">Janma Tara</span></span>
-        <span class="lagna-value">${ascNk.name} Pada ${ascNk.pada}</span>
-      </div>
-      <div class="lagna-row">
-        <span class="lagna-label">Moon Sign<span class="san">Janma Rashi</span></span>
-        <span class="lagna-value">${RASHIS[signOf(moonS)]}<span class="san">${SAN_SIGN[signOf(moonS)]}</span></span>
-      </div>
-      <div class="lagna-row">
-        <span class="lagna-label">Birth Nakshatra<span class="san">Janma Nakshatra</span></span>
-        <span class="lagna-value">${moonNk.name} Pada ${moonNk.pada}</span>
-      </div>
-      <div class="lagna-row">
-        <span class="lagna-label">Nakshatra Lord<span class="san">Nakshatresha</span></span>
-        <span class="lagna-value">${moonNk.lord}<span class="san">${SAN_LORD[moonNk.lord] || moonNk.lord}</span></span>
-      </div>
-      <div class="lagna-row">
-        <span class="lagna-label">Sun Sign<span class="san">Surya Rashi</span></span>
-        <span class="lagna-value">${sunSign}<span class="san">${SAN_SIGN[signOf(sunS)]}</span></span>
-      </div>
-      <div class="lagna-row" style="margin-bottom:0">
-        <span class="lagna-label">Western Sun Sign<span class="san">Tropical zodiac</span></span>
-        <span class="lagna-value">${RASHIS[signOf(sunT)]}</span>
-      </div>
-    `;
+    const moonSign = signOf(moonS), sunSidx = signOf(sunS), westIdx = signOf(sunT);
+    const nkDev = nk => `${DEV_NAK[nk.idx]} · पाद ${devNum(nk.pada)}`;
+    const lrow = (label, labelSan, value, valueSan, last) => `
+      <div class="lagna-row"${last ? ' style="margin-bottom:0"' : ''}>
+        <span class="lagna-label">${label}${labelSan}</span>
+        <span class="lagna-value">${value}${valueSan}</span>
+      </div>`;
+    document.getElementById('lagnaInfo').innerHTML =
+      lrow('Ascendant', SD('Lagna', 'लग्न'), RASHIS[ascSign], SD(SAN_SIGN[ascSign], DEV_SIGN[ascSign])) +
+      lrow('Lagna Nakshatra', SD('Janma Tara', 'जन्म तारा'), `${ascNk.name} Pada ${ascNk.pada}`, SD('', nkDev(ascNk))) +
+      lrow('Moon Sign', SD('Janma Rashi', 'जन्म राशि'), RASHIS[moonSign], SD(SAN_SIGN[moonSign], DEV_SIGN[moonSign])) +
+      lrow('Birth Nakshatra', SD('Janma Nakshatra', 'जन्म नक्षत्र'), `${moonNk.name} Pada ${moonNk.pada}`, SD('', nkDev(moonNk))) +
+      lrow('Nakshatra Lord', SD('Nakshatresha', 'नक्षत्रेश'), moonNk.lord, SD(SAN_LORD[moonNk.lord] || moonNk.lord, DEV_PLANET[moonNk.lord])) +
+      lrow('Sun Sign', SD('Surya Rashi', 'सूर्य राशि'), sunSign, SD(SAN_SIGN[sunSidx], DEV_SIGN[sunSidx])) +
+      lrow('Western Sun Sign', '<span class="san">Tropical zodiac</span>', RASHIS[westIdx], SD('', DEV_SIGN[westIdx]), true);
 
     // Panchang
     const pakshaKey = moonSunDiff < 180 ? 'Shukla' : 'Krishna';
-    document.getElementById('panchaangGrid').innerHTML = `
-      <div class="pg-cell"><div class="pg-label">Day <span class="san">Vāra</span></div><div class="pg-value">${VARA_NAMES[weekday]}<span class="san">${SAN_VARA[weekday]}</span></div></div>
-      <div class="pg-cell"><div class="pg-label">Lunar Day <span class="san">Tithi</span></div><div class="pg-value">${tithiName}</div></div>
-      <div class="pg-cell"><div class="pg-label">Fortnight <span class="san">Paksha</span></div><div class="pg-value">${paksha.split(' ')[0]}<span class="san">${SAN_PAKSHA[pakshaKey]}</span></div></div>
-      <div class="pg-cell"><div class="pg-label">Auspice <span class="san">Yoga</span></div><div class="pg-value">${YOGA_NAMES[yogaIdx]}</div></div>
-      <div class="pg-cell"><div class="pg-label">Half-Tithi <span class="san">Karaṇa</span></div><div class="pg-value">${KARANA_NAMES[karanaIdx]}</div></div>
-      <div class="pg-cell"><div class="pg-label">Day Lord <span class="san">Vāreshvara</span></div><div class="pg-value">${VARA_LORDS[weekday]}<span class="san">${SAN_LORD[VARA_LORDS[weekday]]}</span></div></div>
-    `;
+    const pcell = (label, san, value, valueSan) =>
+      `<div class="pg-cell"><div class="pg-label">${label} <span class="san">${san}</span></div><div class="pg-value">${value}${valueSan}</div></div>`;
+    document.getElementById('panchaangGrid').innerHTML =
+      pcell('Day', 'Vāra', VARA_NAMES[weekday], SD(SAN_VARA[weekday], DEV_VARA[weekday])) +
+      pcell('Lunar Day', 'Tithi', tithiName, SD('', devTithi(tithiIdx))) +
+      pcell('Fortnight', 'Paksha', paksha.split(' ')[0], SD(SAN_PAKSHA[pakshaKey], DEV_PAKSHA[pakshaKey])) +
+      pcell('Auspice', 'Yoga', YOGA_NAMES[yogaIdx], SD('', DEV_YOGA[yogaIdx])) +
+      pcell('Half-Tithi', 'Karaṇa', KARANA_NAMES[karanaIdx], SD('', DEV_KARANA[karanaIdx])) +
+      pcell('Day Lord', 'Vāreshvara', VARA_LORDS[weekday], SD(SAN_LORD[VARA_LORDS[weekday]], DEV_PLANET[VARA_LORDS[weekday]]));
 
     // Planet table
     document.getElementById('planetTable').innerHTML = planetList.map(pl => `
       <tr>
         <td><span class="planet-dot" style="background:${PLANET_COLORS[pl.name]}"></span></td>
-        <td><span class="p-name">${PLANET_SYMBOLS[pl.name]||''} ${pl.name}</span>${pl.retro ? '<span class="p-retro">℞</span>' : ''}</td>
-        <td><span class="p-sign">${RASHI_SHORT[pl.signIdx]} ${parseFloat(pl.degInSign).toFixed(0)}°</span></td>
+        <td><span class="p-name">${PLANET_SYMBOLS[pl.name]||''} ${pl.name}<span class="dev">${DEV_PLANET[pl.name]}</span></span>${pl.retro ? '<span class="p-retro">℞</span>' : ''}</td>
+        <td><span class="p-sign">${RASHI_SHORT[pl.signIdx]} ${parseFloat(pl.degInSign).toFixed(0)}°</span><span class="p-san dev">${DEV_SIGN[pl.signIdx]}</span></td>
         <td><span class="p-house">H${pl.house}</span></td>
       </tr>
     `).join('');
@@ -1430,10 +1503,10 @@ async function generate() {
     // House table
     document.getElementById('houseTbody').innerHTML = houseData.map((h,i) => `
       <tr>
-        <td><span class="h-num">H${h.house}</span></td>
-        <td><span class="h-sign">${h.sign}</span></td>
-        <td><span class="h-lord">${h.lord}</span></td>
-        <td><span class="h-planets">${h.planets.map(p => PLANET_SYMBOLS[p.name]||p.name.slice(0,2)).join(' ') || '—'}</span></td>
+        <td><span class="h-num">H${h.house}</span><span class="h-san"><span class="dev">${DEV_HOUSE[i]}</span></span></td>
+        <td><span class="h-sign">${h.sign}</span><span class="h-san">${SAN_SIGN[h.signIdx]} · <span class="dev">${DEV_SIGN[h.signIdx]}</span></span></td>
+        <td><span class="h-lord">${h.lord}</span><span class="h-san"><span class="dev">${DEV_PLANET[h.lord]}</span></span></td>
+        <td><span class="h-planets">${h.planets.map(p => PLANET_SYMBOLS[p.name]||p.name.slice(0,2)).join(' ') || '—'}</span>${h.planets.length ? `<span class="h-san"><span class="dev">${h.planets.map(p => DEV_ABBR[p.name]).join(' ')}</span></span>` : ''}</td>
         <td><span class="h-meaning">${HOUSE_MEANINGS[i]}</span></td>
       </tr>
     `).join('');
@@ -1480,62 +1553,462 @@ function setNumMode(mode) {
   if (lastChart) drawKundali(lastChart.houseData, lastChart.planets);
 }
 
+// ── PDF export ──
+const DASHA_ORDER = ["Ketu","Venus","Sun","Moon","Mars","Rahu","Jupiter","Saturn","Mercury"];
+const DASHA_YEARS = {Ketu:7, Venus:20, Sun:6, Moon:10, Mars:7, Rahu:18, Jupiter:16, Saturn:19, Mercury:17};
+const YEAR_MS = 365.25 * 864e5;
+const EXALT = {Sun:0, Moon:1, Mars:9, Mercury:5, Jupiter:3, Venus:11, Saturn:6, Rahu:1, Ketu:7};
+
+function dignityOf(pl) {
+  const ex = EXALT[pl.name];
+  if (ex === undefined) return '';
+  if (pl.signIdx === ex) return 'Exalted';
+  if (pl.signIdx === (ex + 6) % 12) return 'Debilitated';
+  if (RASHI_LORD[pl.signIdx] === pl.name) return 'Own sign';
+  return '';
+}
+
+function fmtDMS(deg) {
+  let d = Math.floor(deg), m = Math.round((deg - d) * 60);
+  if (m === 60) { d += 1; m = 0; }
+  return `${d}°${String(m).padStart(2,'0')}'`;
+}
+
+function fmtDate(ms) {
+  const M = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const d = new Date(ms);
+  return `${String(d.getUTCDate()).padStart(2,'0')} ${M[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+}
+
+// Vimshottari Mahadashas from the Moon's nakshatra; antardashas nested inside each.
+function vimshottari(moonLong, birthMs) {
+  const span = 360 / 27;
+  const nk = Math.min(Math.floor(moonLong / span), 26);
+  const frac = (moonLong % span) / span;
+  const first = NK_DATA[nk].lord;
+  const startIdx = DASHA_ORDER.indexOf(first);
+  let t = birthMs - frac * DASHA_YEARS[first] * YEAR_MS;   // theoretical start of the first dasha
+  const out = [];
+  for (let i = 0; i < 9; i++) {
+    const lord = DASHA_ORDER[(startIdx + i) % 9];
+    const len = DASHA_YEARS[lord] * YEAR_MS;
+    const md = { lord, start: t, end: t + len, sub: [] };
+    let s = t;
+    for (let j = 0; j < 9; j++) {
+      const sl = DASHA_ORDER[(startIdx + i + j) % 9];
+      const sLen = len * DASHA_YEARS[sl] / 120;
+      md.sub.push({ lord: sl, start: s, end: s + sLen });
+      s += sLen;
+    }
+    out.push(md);
+    t += len;
+  }
+  return { list: out, balanceYears: (1 - frac) * DASHA_YEARS[first], first };
+}
+
+let jsPDFPromise = null;
+function loadJsPDF() {
+  if (window.jspdf) return Promise.resolve(window.jspdf.jsPDF);
+  if (!jsPDFPromise) jsPDFPromise = new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.onload = () => res(window.jspdf.jsPDF);
+    s.onerror = () => { jsPDFPromise = null; rej(new Error('jsPDF failed to load')); };
+    document.head.appendChild(s);
+  });
+  return jsPDFPromise;
+}
+
+// Chart → PNG. The SVG is rasterised as an <img>, which cannot see the page's web fonts,
+// so the Google Fonts (Latin + Devanagari subsets) are inlined as data URLs first.
+let svgFontCSS = null;
+async function fontCSSForSVG() {
+  if (svgFontCSS !== null) return svgFontCSS;
+  try {
+    const link = document.querySelector('link[href*="fonts.googleapis.com/css2"]');
+    const css = await (await fetch(link.href)).text();
+    const blocks = (css.match(/@font-face\s*{[^}]*}/g) || [])
+      .filter(b => !/unicode-range/.test(b) || /unicode-range:[^;]*(U\+0000-00FF|U\+0900)/i.test(b));
+    const out = await Promise.all(blocks.map(async b => {
+      const m = b.match(/url\(([^)]+)\)/);
+      if (!m) return '';
+      const blob = await (await fetch(m[1].replace(/['"]/g, ''))).blob();
+      const data = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(blob); });
+      return b.replace(m[0], `url(${data})`);
+    }));
+    svgFontCSS = out.join('\n');
+  } catch (e) {
+    console.warn('Font inlining failed; chart image will use system fonts', e);
+    svgFontCSS = '';
+  }
+  return svgFontCSS;
+}
+
+async function chartPNG(px) {
+  const clone = document.getElementById('kundaliSVG').cloneNode(true);
+  clone.setAttribute('width', px); clone.setAttribute('height', px);
+  clone.querySelectorAll('title').forEach(t => t.remove());
+  const css = await fontCSSForSVG();
+  if (css) {
+    const st = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+    st.textContent = css;
+    clone.insertBefore(st, clone.firstChild);
+  }
+  const xml = new XMLSerializer().serializeToString(clone);
+  const img = new Image();
+  await new Promise((res, rej) => {
+    img.onload = res; img.onerror = rej;
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(xml);
+  });
+  await new Promise(r => setTimeout(r, 60));   // let inlined fonts settle before drawing
+  const cv = document.createElement('canvas');
+  cv.width = px; cv.height = px;
+  const ctx = cv.getContext('2d');
+  ctx.fillStyle = '#14100A'; ctx.fillRect(0, 0, px, px);
+  ctx.drawImage(img, 0, 0, px, px);
+  return cv.toDataURL('image/png');
+}
+
 async function downloadKundli() {
   if (!lastChart) return;
   const btn = document.getElementById('dlBtn');
-  const label = btn.textContent;
-  btn.disabled = true; btn.textContent = 'Preparing…';
+  const txt = document.getElementById('dlTxt');
+  const label = txt.innerHTML;
+  btn.disabled = true; txt.innerHTML = '<span class="spin"></span> Preparing PDF…';
   try {
-    // Chart SVG → image
-    const clone = document.getElementById('kundaliSVG').cloneNode(true);
-    clone.setAttribute('width', 1000); clone.setAttribute('height', 1000);
-    clone.querySelectorAll('title').forEach(t => t.remove());
-    const xml = new XMLSerializer().serializeToString(clone);
-    const img = new Image();
-    await new Promise((res, rej) => {
-      img.onload = res; img.onerror = rej;
-      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(xml);
-    });
-    if (document.fonts && document.fonts.ready) await document.fonts.ready;
-
-    const W = 1200, chartSz = 1000, top = 210, H = top + chartSz + 260;
-    const cv = document.createElement('canvas');
-    cv.width = W; cv.height = H;
-    const ctx = cv.getContext('2d');
-    ctx.fillStyle = '#0E0B07'; ctx.fillRect(0, 0, W, H);
-    ctx.textAlign = 'center';
-    // draw centred text, shrinking the font until it fits the width
-    const fitText = (txt, y, px, family, color) => {
-      ctx.fillStyle = color;
-      do { ctx.font = `${px}px ${family}`; px -= 1; } while (ctx.measureText(txt).width > W - 80 && px > 10);
-      ctx.fillText(txt, W/2, y);
-    };
-
-    fitText(lastChart.name, 105, 64, '"IM Fell English", serif', '#F5E4B0');
-    fitText(lastChart.details.toUpperCase(), 160, 22, '"DM Mono", monospace', '#A09070');
-
-    ctx.drawImage(img, (W - chartSz)/2, top, chartSz, chartSz);
-
-    const y0 = top + chartSz;
-    fitText(lastChart.summary, y0 + 70, 32, '"Crimson Pro", serif', '#E8D8B0');
-    fitText('Su Sun · Mo Moon · Ma Mars · Me Mercury · Ju Jupiter', y0 + 125, 20, '"DM Mono", monospace', '#A09070');
-    fitText('Ve Venus · Sa Saturn · Ra Rahu · Ke Ketu · ℞ Retrograde', y0 + 157, 20, '"DM Mono", monospace', '#A09070');
-    fitText((chartNumMode === 'house'
-      ? 'North Indian chart · numbers are houses (1 = Lagna)'
-      : 'North Indian chart · numbers are signs (1 = Aries)') + ' · Lahiri ayanamsa', y0 + 215, 18, '"DM Mono", monospace', '#60503A');
-
-    const blob = await new Promise(res => cv.toBlob(res, 'image/png'));
-    const a = document.createElement('a');
-    const safe = lastChart.name.replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-') || 'Native';
-    a.download = `Kundli-${safe}-${lastChart.dob}.png`;
-    a.href = URL.createObjectURL(blob);
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    if (document.fonts) {
+      await document.fonts.load("40px 'Tiro Devanagari Sanskrit'", 'जन्म कुण्डली').catch(() => {});
+      await document.fonts.ready;
+    }
+    const [jsPDF, chartImg] = await Promise.all([loadJsPDF(), chartPNG(1400)]);
+    buildKundliPDF(jsPDF, chartImg);
   } catch (e) {
-    showErr('Could not create the image. Please try again.');
+    console.error(e);
+    showErr('Could not create the PDF. Please check your connection and try again.');
   } finally {
-    btn.disabled = false; btn.textContent = label;
+    btn.disabled = false; txt.innerHTML = label;
   }
+}
+
+// Devanagari needs glyph shaping (conjuncts, matras) that PDF base fonts can't do,
+// so each Devanagari string is drawn by the browser onto a canvas and placed as an image.
+function devRenderer() {
+  const cache = new Map();
+  const PX = 8;                       // canvas pixels per point (~576 dpi)
+  const MM = 25.4 / 72 / PX;          // mm per canvas pixel
+  return (text, pt, rgb, family = DEV_FONT, weight = 400) => {
+    const key = `${text}|${pt}|${rgb}|${family}|${weight}`;
+    if (cache.has(key)) return cache.get(key);
+    const fpx = pt * PX, font = `${weight} ${fpx}px ${family}`;
+    const cv = document.createElement('canvas');
+    let ctx = cv.getContext('2d');
+    ctx.font = font;
+    const pad = Math.ceil(fpx * 0.08);
+    cv.width = Math.ceil(ctx.measureText(text).width) + 2 * pad;
+    cv.height = Math.ceil(fpx * 1.55);
+    ctx = cv.getContext('2d');
+    ctx.font = font; ctx.fillStyle = `rgb(${rgb.join(',')})`;
+    ctx.fillText(text, pad, fpx * 1.12);
+    const r = { key: 'dev' + cache.size, data: cv.toDataURL('image/png'),
+      w: cv.width * MM, h: cv.height * MM, base: fpx * 1.12 * MM, pad: pad * MM };
+    r.tw = r.w - 2 * r.pad;           // visible text width
+    cache.set(key, r);
+    return r;
+  };
+}
+
+function buildKundliPDF(jsPDF, chartImg) {
+  const C = lastChart;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4', compress: true });
+  const W = 210, H = 297, M = 16;
+  // Base PDF fonts only cover Latin-1: strip diacritics and swap unsupported glyphs.
+  // Base PDF fonts only cover Latin-1: keep Latin-1 accents, fold other accents (ā → a).
+  // Anything still outside Latin-1 (Devanagari place names, names typed in Hindi…) is drawn as an image.
+  const fold = s => [...String(s ?? '').normalize('NFC')]
+    .map(ch => ch <= '\xFF' ? ch : ch.normalize('NFD').replace(/[\u0300-\u036f]/g, '')).join('')
+    .replace(/℞/g, 'R').replace(/[–—]/g, '-');
+  const t = s => fold(s).replace(/[^\x00-\xFF]/g, '');
+  const needsImg = s => /[^\x00-\xFF]/.test(fold(s));
+  const famFor = f => (f === 'helvetica' ? "'DM Mono', " : "'Crimson Pro', ") + DEV_FONT;
+  const INK = [40, 30, 18], DIM = [120, 100, 70], GOLD = [160, 120, 40], FAINT = [175, 160, 130];
+  const DEVC = [150, 105, 30];
+  const LINE = [222, 205, 165], PAPER = [251, 246, 234], BAND = [243, 233, 210];
+  const col = c => doc.setTextColor(...c);
+  const font = (f, st, sz) => { doc.setFont(f, st); doc.setFontSize(sz); };
+  const devImg = devRenderer();
+  let page = 0;
+
+  // Draw Devanagari with its baseline at y. Returns visible width.
+  const dev = (text, x, y, pt, rgb = DEVC, align = 'left', family, weight) => {
+    if (!text) return 0;
+    const r = devImg(text, pt, rgb, family, weight);
+    const left = align === 'right' ? x - r.tw : align === 'center' ? x - r.tw / 2 : x;
+    doc.addImage(r.data, 'PNG', left - r.pad, y - r.base, r.w, r.h, r.key, 'FAST');
+    return r.tw;
+  };
+  const devW = (text, pt) => text ? devImg(text, pt, DEVC).tw : 0;
+  // A run of mixed parts: {t, f, s, z, c} for Latin text, {d, z, c} for Devanagari.
+  const GAP = 1.6;
+  const uniArgs = p => [p.z, p.c || INK, famFor(p.f), p.s === 'bold' ? 600 : 400];
+  const partW = p => p.d !== undefined ? devW(p.d, p.z)
+    : needsImg(p.t) ? devImg(fold(p.t), ...uniArgs(p)).tw
+    : (font(p.f || 'times', p.s || 'normal', p.z), doc.getTextWidth(t(p.t)));
+  const run = (parts, x, y, align = 'left') => {
+    parts = parts.filter(p => (p.d ?? p.t) !== '' && (p.d ?? p.t) != null);
+    const total = parts.reduce((s, p) => s + partW(p), 0) + GAP * (parts.length - 1);
+    let cx = align === 'right' ? x - total : align === 'center' ? x - total / 2 : x;
+    parts.forEach(p => {
+      if (p.d !== undefined) cx += dev(p.d, cx, y, p.z, p.c || DEVC);
+      else if (needsImg(p.t)) { const [z, c, fam, wt] = uniArgs(p); cx += dev(fold(p.t), cx, y, z, c, 'left', fam, wt); }
+      else { font(p.f || 'times', p.s || 'normal', p.z); col(p.c || INK); doc.text(t(p.t), cx, y); cx += doc.getTextWidth(t(p.t)); }
+      cx += GAP;
+    });
+    return total;
+  };
+
+  const newPage = () => {
+    if (page++) doc.addPage();
+    doc.setFillColor(...PAPER); doc.rect(0, 0, W, H, 'F');
+    doc.setDrawColor(...GOLD); doc.setLineWidth(0.5); doc.rect(8, 8, W - 16, H - 16);
+    doc.setLineWidth(0.15); doc.rect(9.5, 9.5, W - 19, H - 19);
+  };
+  const footer = () => {
+    font('times', 'italic', 8); col(FAINT);
+    run([{ t: `${C.name} · Janma Kundali · Lahiri ayanamsa · Whole-sign houses · For spiritual guidance only`, s: 'italic', z: 8, c: FAINT }], W / 2, H - 13, 'center');
+    font('times', 'italic', 8); col(FAINT);
+    doc.text(`${page}`, W - M, H - 13, { align: 'right' });
+  };
+  const sectionTitle = (title, devTitle, sub, y) => {
+    run([{ t: title, s: 'bold', z: 13 }, { d: devTitle, z: 12 }, { t: sub, s: 'italic', z: 10, c: GOLD }], M, y);
+    doc.setDrawColor(...LINE); doc.setLineWidth(0.3); doc.line(M, y + 2.6, W - M, y + 2.6);
+    return y + 9;
+  };
+  // Table. Cells are strings or {t, d}: d is a Devanagari line under the Latin text.
+  const table = (cols, rows, y, opts = {}) => {
+    const two = rows.some(r => r.some(c => c && typeof c === 'object' && c.d));
+    const rh = two ? 9.2 : 6.6, hh = 6.6;
+    let x = M;
+    doc.setFillColor(...BAND); doc.rect(M, y, W - 2 * M, hh, 'F');
+    font('helvetica', 'bold', 7.2); col(DIM);
+    cols.forEach(c => {
+      doc.text(t(c.h).toUpperCase(), c.align === 'right' ? x + c.w - 2 : x + 2, y + hh * 0.66, { align: c.align || 'left' });
+      x += c.w;
+    });
+    y += hh;
+    rows.forEach((r, ri) => {
+      const hl = opts.highlight && opts.highlight(ri);
+      if (hl) { doc.setFillColor(248, 232, 190); doc.rect(M, y, W - 2 * M, rh, 'F'); }
+      x = M;
+      r.forEach((cell, ci) => {
+        const c = cols[ci];
+        const obj = cell && typeof cell === 'object' ? cell : { t: cell };
+        font(c.font || 'times', (c.bold || hl) ? 'bold' : (c.italic ? 'italic' : 'normal'), c.size || 9.5);
+        col(c.color || INK);
+        let s = t(obj.t);
+        if (doc.getTextWidth(s) > c.w - 3) {
+          while (s.length > 1 && doc.getTextWidth(s + '.') > c.w - 3) s = s.slice(0, -1);
+          s += '.';
+        }
+        const tx = c.align === 'right' ? x + c.w - 2 : x + 2;
+        const ty = two ? (obj.d ? y + 4.1 : y + rh * 0.6) : y + rh * 0.66;
+        doc.text(s, tx, ty, { align: c.align || 'left' });
+        if (obj.d) dev(obj.d, tx, y + 7.9, 7.6, DEVC, c.align || 'left');
+        x += c.w;
+      });
+      doc.setDrawColor(...LINE); doc.setLineWidth(0.15); doc.line(M, y + rh, W - M, y + rh);
+      y += rh;
+    });
+    return y;
+  };
+  // Key/value list. value and sub are arrays of run parts (or a plain string for value).
+  const kv = (pairs, x, y, w) => {
+    pairs.forEach(([k, v, sub]) => {
+      font('helvetica', 'normal', 7.2); col(DIM); doc.text(t(k).toUpperCase(), x, y);
+      run(typeof v === 'string' ? [{ t: v, s: 'bold', z: 10.5 }] : v, x + w, y, 'right');
+      if (sub) run(sub, x + w, y + 4.4, 'right');
+      const ly = y + (sub ? 6.4 : 2.4);
+      doc.setDrawColor(...LINE); doc.setLineWidth(0.15); doc.line(x, ly, x + w, ly);
+      y += sub ? 11 : 7;
+    });
+    return y;
+  };
+  const san = (rom, d) => [{ t: rom, s: 'italic', z: 8.5, c: GOLD }, { d, z: 8.5 }];
+  const nkDev = nk => `${DEV_NAK[nk.idx]} · पाद ${devNum(nk.pada)}`;
+  const sname = p => SAN_PLANET[p].split(' /')[0];
+
+  // ── PAGE 1: title, chart, key facts ──
+  newPage();
+  font('helvetica', 'normal', 7.5); col(GOLD);
+  doc.text('JANMA KUNDALI  ·  VEDIC BIRTH CHART', W / 2, 20, { align: 'center', charSpace: 0.6 });
+  dev('जन्म कुण्डली', W / 2, 27.5, 12, GOLD, 'center');
+  run([{ t: C.name, s: 'bold', z: 26 }], W / 2, 38.5, 'center');
+  if (needsImg(C.details)) run([{ t: C.details.toUpperCase(), f: 'helvetica', z: 8.5, c: DIM }], W / 2, 45, 'center');
+  else { font('helvetica', 'normal', 8.5); col(DIM); doc.text(t(C.details.toUpperCase()), W / 2, 45, { align: 'center', charSpace: 0.3 }); }
+
+  const cs = 112, cx = (W - cs) / 2, cy = 51;
+  doc.addImage(chartImg, 'PNG', cx, cy, cs, cs);
+  doc.setDrawColor(...GOLD); doc.setLineWidth(0.4); doc.rect(cx - 1.5, cy - 1.5, cs + 3, cs + 3);
+  // Legend: Latin and Devanagari abbreviations
+  const legend = ['Sun','Moon','Mars','Mercury','Jupiter','Venus','Saturn','Rahu','Ketu'];
+  const legParts = [];
+  legend.forEach((p, i) => {
+    legParts.push({ t: PLANET_ABBR[p], f: 'helvetica', s: 'bold', z: 7, c: DIM }, { d: DEV_ABBR[p], z: 7.5, c: DIM },
+      { t: p + (i < legend.length - 1 ? '  ·' : ''), f: 'helvetica', z: 7, c: DIM });
+  });
+  run(legParts, W / 2, cy + cs + 7, 'center');
+  font('helvetica', 'normal', 7); col(FAINT);
+  doc.text(t(chartNumMode === 'house'
+    ? 'North Indian chart · numbers are houses (1 = Lagna, top diamond) · sign names in Devanagari'
+    : 'North Indian chart · numbers are signs (1 = Aries) · sign names in Devanagari'), W / 2, cy + cs + 11.5, { align: 'center' });
+
+  let y = cy + cs + 21;
+  const colW = (W - 2 * M - 12) / 2, x2 = M + colW + 12;
+  run([{ t: 'Birth Details', s: 'bold', z: 12 }, { d: 'जन्म विवरण', z: 10.5 }], M, y);
+  run([{ t: 'Lagna & Moon', s: 'bold', z: 12 }, { d: 'लग्न एवं चन्द्र', z: 10.5 }], x2, y);
+  doc.setDrawColor(...GOLD); doc.setLineWidth(0.3);
+  doc.line(M, y + 2.4, M + colW, y + 2.4); doc.line(x2, y + 2.4, W - M, y + 2.4);
+  const ns = (v, a, b) => `${Math.abs(v).toFixed(4)}° ${v >= 0 ? a : b}`;
+  kv([
+    ['Date of birth', C.dateStr, san(VARA_NAMES[C.weekday], DEV_VARA[C.weekday])],
+    ['Time of birth', C.tob + ' (local)'],
+    ['Place', C.place],
+    ['Latitude', ns(C.lat, 'N', 'S')],
+    ['Longitude', ns(C.lon, 'E', 'W')],
+    ['Time zone', `UTC${C.utcOff >= 0 ? '+' : ''}${C.utcOff}`],
+    ['Ayanamsa (Lahiri)', fmtDMS(C.ayanamsa), [{ d: 'लाहिरी अयनांश', z: 8.5 }]],
+  ], M, y + 9, colW);
+  kv([
+    ['Ascendant · Lagna', `${RASHIS[C.ascSign]} ${fmtDMS(degInSign(C.ascLong))}`, san(SAN_SIGN[C.ascSign], DEV_SIGN[C.ascSign])],
+    ['Lagna nakshatra', `${C.ascNk.name} · Pada ${C.ascNk.pada}`, [{ d: nkDev(C.ascNk), z: 8.5 }]],
+    ['Moon sign · Rashi', RASHIS[C.moonSign], san(SAN_SIGN[C.moonSign], DEV_SIGN[C.moonSign])],
+    ['Birth nakshatra', `${C.moonNk.name} · Pada ${C.moonNk.pada}`, [{ d: nkDev(C.moonNk), z: 8.5 }]],
+    ['Nakshatra lord', C.moonNk.lord, san(sname(C.moonNk.lord), DEV_PLANET[C.moonNk.lord])],
+    ['Sun sign (sidereal)', RASHIS[C.sunSign], san(SAN_SIGN[C.sunSign], DEV_SIGN[C.sunSign])],
+    ['Western sun sign', RASHIS[C.westSun], [{ t: 'tropical', s: 'italic', z: 8.5, c: GOLD }, { d: DEV_SIGN[C.westSun], z: 8.5 }]],
+  ], x2, y + 9, colW);
+  footer();
+
+  // ── PAGE 2: panchang + planets ──
+  newPage();
+  y = sectionTitle('Panchang', 'पञ्चाङ्ग', 'the five limbs of the day', 22);
+  const pg = [
+    ['Vara · Day', VARA_NAMES[C.weekday], DEV_VARA[C.weekday]],
+    ['Tithi · Lunar day', C.tithi, devTithi(C.tithiIdx)],
+    ['Paksha · Fortnight', C.paksha, DEV_PAKSHA[C.paksha]],
+    ['Yoga', C.yoga, DEV_YOGA[C.yogaIdx]],
+    ['Karana · Half-tithi', C.karana, DEV_KARANA[C.karanaIdx]],
+    ['Day lord', C.dayLord, DEV_PLANET[C.dayLord]],
+  ];
+  const cw = (W - 2 * M) / 3;
+  pg.forEach(([k, v, d], i) => {
+    const x = M + (i % 3) * cw, yy = y + Math.floor(i / 3) * 17;
+    doc.setFillColor(...BAND); doc.rect(x + 0.8, yy - 4, cw - 1.6, 15, 'F');
+    font('helvetica', 'normal', 6.8); col(DIM); doc.text(t(k).toUpperCase(), x + 3.5, yy);
+    font('times', 'bold', 11); col(INK); doc.text(t(v), x + 3.5, yy + 5);
+    dev(d, x + 3.5, yy + 9.6, 9);
+  });
+  y += 39;
+
+  y = sectionTitle('Graha Sthiti', 'ग्रह स्थिति', 'planetary positions', y);
+  const pRows = [[
+    { t: 'Ascendant', d: 'लग्न' }, 'Lagna', { t: RASHIS[C.ascSign], d: DEV_SIGN[C.ascSign] }, fmtDMS(degInSign(C.ascLong)),
+    { t: C.ascNk.name, d: DEV_NAK[C.ascNk.idx] }, C.ascNk.pada, { t: C.ascNk.lord, d: DEV_PLANET[C.ascNk.lord] }, '1', '', ''
+  ]].concat(C.planets.map(pl => {
+    const nk = nakshatra(pl.long);
+    return [{ t: pl.name, d: DEV_PLANET[pl.name] }, sname(pl.name), { t: pl.sign, d: DEV_SIGN[pl.signIdx] },
+      fmtDMS(degInSign(pl.long)), { t: nk.name, d: DEV_NAK[nk.idx] }, nk.pada, { t: nk.lord, d: DEV_PLANET[nk.lord] },
+      pl.house, dignityOf(pl), pl.retro ? 'R' : ''];
+  }));
+  y = table([
+    { h: 'Graha', w: 22, bold: true }, { h: 'Sanskrit', w: 19, italic: true, color: GOLD },
+    { h: 'Sign', w: 23 }, { h: 'Degree', w: 16, font: 'helvetica', size: 8.5 },
+    { h: 'Nakshatra', w: 33 }, { h: 'Pada', w: 10, align: 'right', font: 'helvetica', size: 8.5 },
+    { h: 'Nak. lord', w: 17 }, { h: 'House', w: 12, align: 'right', font: 'helvetica', size: 8.5 },
+    { h: 'Dignity', w: 19, italic: true, color: DIM }, { h: 'Retro', w: 7, align: 'right', color: [176, 80, 40], bold: true },
+  ], pRows, y);
+  font('times', 'italic', 7.5); col(FAINT);
+  doc.text('R = retrograde (Rahu and Ketu always move retrograde). Dignity shows exaltation, debilitation or own sign.', M, y + 4);
+  y += 16;
+
+  // Planet key with Devanagari names, as a reference strip
+  y = sectionTitle('Navagraha', 'नवग्रह', 'the nine planets', y);
+  const gw = (W - 2 * M) / 3;
+  legend.forEach((p, i) => {
+    const x = M + (i % 3) * gw, yy = y + Math.floor(i / 3) * 9;
+    run([{ t: PLANET_ABBR[p], f: 'helvetica', s: 'bold', z: 8, c: GOLD }, { d: DEV_ABBR[p], z: 9, c: GOLD },
+         { t: `${p} · ${sname(p)}`, z: 10 }, { d: DEV_PLANET[p], z: 9.5 }], x + 2, yy);
+  });
+  footer();
+
+  // ── PAGE 3: houses ──
+  newPage();
+  y = sectionTitle('Bhava Chakra', 'भाव चक्र', 'the twelve houses', 22);
+  y = table([
+    { h: 'Bhava', w: 13, font: 'helvetica', size: 8.5, color: GOLD, bold: true }, { h: 'Sanskrit', w: 26, italic: true, color: GOLD },
+    { h: 'Sign', w: 25 }, { h: 'Lord', w: 20 },
+    { h: 'Planets', w: 30, bold: true }, { h: 'Signification', w: 64, italic: true, color: DIM, size: 9 },
+  ], C.houseData.map((h, i) => [
+    'H' + h.house, { t: SAN_HOUSE[i], d: DEV_HOUSE[i] }, { t: h.sign, d: DEV_SIGN[h.signIdx] }, { t: h.lord, d: DEV_PLANET[h.lord] },
+    h.planets.length
+      ? { t: h.planets.map(p => PLANET_ABBR[p.name] + (p.retro && !['Rahu','Ketu'].includes(p.name) ? '(R)' : '')).join(' '),
+          d: h.planets.map(p => DEV_ABBR[p.name]).join(' ') }
+      : '-',
+    HOUSE_MEANINGS[i],
+  ]), y);
+  footer();
+
+  // ── PAGE 4: Vimshottari dasha ──
+  newPage();
+  const birthMs = (C.jd - 2440587.5) * 864e5;
+  const das = vimshottari(C.moonLong, birthMs);
+  const now = Date.now();
+  const curIdx = das.list.findIndex(d => now >= d.start && now < d.end);
+  y = sectionTitle('Vimshottari Dasha', 'विंशोत्तरी दशा', 'planetary periods', 22);
+  const by = Math.floor(das.balanceYears), bm = Math.floor((das.balanceYears - by) * 12),
+        bd = Math.round(((das.balanceYears - by) * 12 - bm) * 30.44);
+  run([{ t: `Born in ${C.moonNk.name}`, z: 10 }, { d: `(${DEV_NAK[C.moonNk.idx]})`, z: 9.5 },
+       { t: `nakshatra, ruled by ${das.first}. Balance at birth: ${das.first} ${by}y ${bm}m ${bd}d.`, z: 10 }], M, y);
+  y += 5;
+  y = table([
+    { h: 'Mahadasha', w: 40, bold: true }, { h: 'Sanskrit', w: 34, italic: true, color: GOLD },
+    { h: 'Years', w: 18, align: 'right', font: 'helvetica', size: 8.5 },
+    { h: 'From', w: 43, align: 'right', font: 'helvetica', size: 8.5 }, { h: 'To', w: 43, align: 'right', font: 'helvetica', size: 8.5 },
+  ], das.list.map((d, i) => [
+    { t: d.lord + (i === curIdx ? '  (current)' : ''), d: DEV_PLANET[d.lord] + ' महादशा' }, sname(d.lord), DASHA_YEARS[d.lord],
+    i === 0 ? fmtDate(birthMs) + ' (birth)' : fmtDate(d.start), fmtDate(d.end),
+  ]), y, { highlight: i => i === curIdx });
+  y += 10;
+
+  const md = das.list[curIdx >= 0 ? curIdx : 0];
+  y = sectionTitle(`${md.lord} Mahadasha`, 'अन्तर्दशा', 'antardasha sub-periods', y);
+  const subCur = md.sub.findIndex(s => now >= s.start && now < s.end);
+  y = table([
+    { h: 'Antardasha', w: 52, bold: true }, { h: 'Sanskrit', w: 40, italic: true, color: GOLD },
+    { h: 'From', w: 43, align: 'right', font: 'helvetica', size: 8.5 }, { h: 'To', w: 43, align: 'right', font: 'helvetica', size: 8.5 },
+  ], md.sub.map((s, i) => [
+    { t: `${md.lord} / ${s.lord}` + (i === subCur ? '  (current)' : ''), d: `${DEV_PLANET[md.lord]} / ${DEV_PLANET[s.lord]}` },
+    sname(s.lord), fmtDate(Math.max(s.start, birthMs)) + (s.end < birthMs ? ' *' : ''), fmtDate(s.end),
+  ]), y, { highlight: i => i === subCur });
+  if (md.sub.some(s => s.end < birthMs)) {
+    font('times', 'italic', 7.5); col(FAINT);
+    doc.text('* Sub-period completed before birth.', M, y + 4);
+  }
+  y += 9;
+
+  doc.setFillColor(...BAND); doc.rect(M, y, W - 2 * M, 17, 'F');
+  font('times', 'italic', 9); col(DIM);
+  doc.text(doc.splitTextToSize(t(
+    'Positions are computed in the browser with Jean Meeus / Schlyter algorithms (accuracy about 1-3 arc-minutes, 1920-2080) ' +
+    'and Lahiri ayanamsa. Dasha dates use 365.25-day years. This chart is for spiritual and educational guidance; ' +
+    'consult a qualified Jyotishi before making important decisions.'), W - 2 * M - 8), M + 4, y + 5.5);
+  font('helvetica', 'normal', 7); col(FAINT);
+  doc.text(t(`Generated ${fmtDate(now)}`), W / 2, y + 22, { align: 'center' });
+  footer();
+
+  // Browsers may reject non-ASCII download names, so the file name stays ASCII.
+  const safe = C.name.replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-');
+  doc.setProperties({ title: `Kundli - ${C.name}`, subject: 'Vedic birth chart' });
+  doc.save(`Kundli-${safe ? safe + '-' : ''}${C.dob}.pdf`);
 }
 
 
@@ -1606,7 +2079,7 @@ function buildRefCards() {
       <div class="ref-card" onclick="this.classList.toggle('open')">
         <div class="ref-card-head">
           <span class="ref-card-sym" style="color:${item.color}">${item.sym}</span>
-          <span class="ref-card-name">${item.name}</span>
+          <span class="ref-card-name">${item.name}<span class="dev">${DEV_PLANET[item.name] || DEV_SIGN[RASHIS.indexOf(item.name)] || ''}</span></span>
           <span class="ref-card-arr">▼</span>
         </div>
         <div class="ref-card-body">
