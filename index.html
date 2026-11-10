@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vedic Kundali — Birth Chart Generator</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230E0B07'/%3E%3Cdefs%3E%3Cmask id='c'%3E%3Crect width='64' height='64' fill='%23fff'/%3E%3Ccircle cx='25' cy='27' r='19' fill='%23000'/%3E%3C/mask%3E%3C/defs%3E%3Ccircle cx='33' cy='32' r='21' fill='%23D2AA50' mask='url(%23c)'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
@@ -317,6 +318,28 @@ h1 span { color: var(--gold); font-style: italic; }
   width: 100%; height: 100%;
 }
 
+.chart-col { min-width: 0; }
+.chart-tools {
+  max-width: 460px; margin: 0.9rem auto 0;
+  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;
+}
+.chart-tools .btn-reset { padding: 8px 1.1rem; }
+.chart-tools .btn-reset:disabled { opacity: 0.5; cursor: wait; }
+.num-toggle {
+  display: inline-flex; align-items: center;
+  font-family: 'DM Mono', monospace; font-size: 0.62rem;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint);
+}
+.num-toggle span { margin-right: 8px; }
+.num-toggle button {
+  font: inherit; letter-spacing: inherit; text-transform: inherit;
+  padding: 7px 12px; background: transparent; color: var(--text-dim);
+  border: 1px solid var(--border); cursor: pointer; transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+.num-toggle button + button { border-left: none; }
+.num-toggle button:hover { color: var(--gold); }
+.num-toggle button.active { color: var(--gold); background: rgba(210,170,80,0.08); border-color: var(--border2); }
+
 /* ─── SIDEBAR PANELS ─── */
 .side-panel {
   display: flex; flex-direction: column; gap: 1rem;
@@ -532,9 +555,19 @@ footer {
       </div>
 
       <div class="chart-layout">
-        <!-- NORTH INDIAN CHART SVG -->
-        <div class="chart-container">
-          <svg id="kundaliSVG" viewBox="0 0 460 460" xmlns="http://www.w3.org/2000/svg"></svg>
+        <!-- NORTH INDIAN KUNDALI SVG -->
+        <div class="chart-col">
+          <div class="chart-container">
+            <svg id="kundaliSVG" viewBox="0 0 460 460" xmlns="http://www.w3.org/2000/svg"></svg>
+          </div>
+          <div class="chart-tools">
+            <div class="num-toggle" role="group" aria-label="Numbers shown in chart">
+              <span>Numbers</span>
+              <button type="button" data-mode="house" class="active" onclick="setNumMode('house')">House</button>
+              <button type="button" data-mode="sign" onclick="setNumMode('sign')">Sign</button>
+            </div>
+            <button type="button" class="btn-reset" id="dlBtn" onclick="downloadKundli()">↓ Download Kundli</button>
+          </div>
         </div>
 
         <!-- SIDEBAR -->
@@ -1034,249 +1067,172 @@ function nakshatra(sidLong) {
 // ══════════════════════════════════════════════
 
 /*
-  North Indian layout — fixed house position:
-  Houses are FIXED in the diamond grid.
-  1 = top-center triangle, 2 = upper-right-inner, 3 = right-top,
-  4 = right-center, 5 = right-bottom, 6 = lower-right-inner,
-  7 = bottom-center, 8 = lower-left-inner, 9 = left-bottom,
-  10 = left-center, 11 = left-top, 12 = upper-left-inner
-  Signs rotate based on ascendant.
+  Classic North Indian kundali: a square with both diagonals and an inner
+  diamond, giving 12 fixed houses. House 1 (Lagna) is the top-centre diamond
+  and houses run anticlockwise:
+
+        ┌─────────┬─────────┐
+        │╲  2    ╱ ╲   12  ╱│
+        │ 3╲   ╱ 1   ╲   ╱11│
+        │   ╱ ╲       ╱ ╲   │
+        │ ╱ 4   ╲   ╱  10 ╲ │
+        │   ╲   ╱  ╲   ╱    │      (schematic)
+        │ 5   ╲  7   ╱   9  │
+        │╱  6   ╲   ╱  8   ╲│
+        └─────────┴─────────┘
+
+  Houses are fixed. The number at each house's inner corner is either the house
+  number (default: 1 = Lagna, always the top diamond) or, in "sign" mode, the
+  rashi number (1 = Aries … 12 = Pisces), which rotates with the ascendant.
 */
 
-const S = 460; // SVG size
-const C = S/2; // center
+const KUNDALI_SZ = 460;
 
-// House polygon definitions (in SVG coords)
-// The outer square: corners at (0,0),(S,0),(S,S),(0,S)
-// The inner diamond: (C,0),(S,C),(C,S),(0,C)
-// Each house is a polygon formed by outer corners + diamond points
+const PLANET_ABBR = {
+  Sun:"Su", Moon:"Mo", Mars:"Ma", Mercury:"Me", Jupiter:"Ju",
+  Venus:"Ve", Saturn:"Sa", Rahu:"Ra", Ketu:"Ke",
+};
 
-const HOUSE_POLYS = [
-  // H1: top triangle (Asc) — C,0 | S/2-half, top | S/2+half, top => top edge center triangle
-  [[C,0],[C-C/2,0],[C,C/2]], // wrong, let me define properly
-];
-
-// Proper North Indian chart house positions:
-// S=460, C=230
-// Outer corners: TL(0,0), TR(S,0), BR(S,S), BL(0,S)
-// Diamond: Top(C,0), Right(S,C), Bottom(C,S), Left(0,C)
-// Center square: (C-C/3, C-C/3) to (C+C/3, C+C/3) — actually just the middle
-
-// Let's define 12 triangular/quadrilateral house cells:
-const HP = [
-  // H1: top center triangle
-  [[C,0],[0,0],[S,0]],       // top edge → but standard is triangle pointing down
-  // Standard North Indian:
-  // H1 = top diamond triangle: top(C,0), TL-inner(C/2,C/2), TR-inner(3C/2,C/2) → wrong
-];
-
-// Let me do this properly with exact coordinates
-const q = C; // 230 — half size
-// Key points
-const TL=[0,0], TR=[S,0], BR=[S,S], BL=[0,S];
-const DT=[C,0], DR=[S,C], DB=[C,S], DL=[0,C]; // diamond
-const IC=[C,C]; // inner center
-
-// 12 house quadrilaterals (North Indian standard):
-const HOUSES_POLY = [
-  // H1: top center ─ triangle
-  [DT, TL, TR],                        // H1: top triangle (Asc house)
-  // H2: upper right quadrilateral
-  [TR, DR, [C+q/2,q/2], [C,0]],       // actually [TR, DT, IC_upper_right, DR]
-  // Let me use a cleaner approach:
-];
-
-// Cleaner approach: divide the square into 12 using the classic grid
-// The square is divided: outer square with inner diamond, and inner diamond's center
-// Giving 12 regions.
-
-// Points used:
-// TL(0,0), T_mid(C,0), TR(S,0)
-// L_mid(0,C), Center(C,C), R_mid(S,C)
-// BL(0,S), B_mid(C,S), BR(S,S)
-// Inner quad corners: iA(C/2,C/2), iB(3C/2,C/2), iC(3C/2,3C/2), iD(C/2,3C/2)
-
-// Actually the canonical North Indian chart:
-const iA = [C/2, C/2];     // upper-left inner
-const iB = [3*C/2, C/2];   // upper-right inner  
-const iC = [3*C/2, 3*C/2]; // lower-right inner
-const iD = [C/2, 3*C/2];   // lower-left inner
-
-const HOUSE_POLYS_FINAL = [
-  // H1:  top center triangle
-  [[0,0],  [S,0],  [3*C/2,C/2], [C/2,C/2]],          // top band
-  // H2:  upper-right triangle
-  [[S,0],  [S,C],  [3*C/2,C/2]],
-  // H3:  right-upper triangle  
-  [[S,0],  [S,C],  [3*C/2,C/2]], // <- need to fix
-];
-
-// I'll use a well-known coordinate system for North Indian kundali:
-// The 12 houses as polygons on a 460x460 grid
-
-function buildHousePolygons(sz) {
-  const h = sz/2;  // 230
-  const q = sz/4;  // 115
-  // Standard 12-house North Indian polygons:
+// Geometry for each house: polygon, where its planets go, where its sign number goes
+function buildHouseLayout(sz) {
+  const h = sz / 2, q = sz / 4;
+  const TL=[0,0], TM=[h,0], TR=[sz,0], ML=[0,h], C=[h,h], MR=[sz,h], BL=[0,sz], BM=[h,sz], BR=[sz,sz];
+  const a=[q,q], b=[3*q,q], c=[3*q,3*q], d=[q,3*q];   // where diagonals cross the diamond
+  // kind: 'kite' (big diamond houses), 'top'/'bottom' (triangles on top/bottom edge),
+  //       'side' (triangles on left/right edge)
   return [
-    // H1: top center (Ascendant) — trapezoid at top
-    [{x:q,y:0},{x:3*q,y:0},{x:3*q,y:q},{x:q,y:q}],
-    // H2: upper right triangle
-    [{x:3*q,y:0},{x:sz,y:0},{x:3*q,y:q}],
-    // H3: right upper triangle
-    [{x:sz,y:0},{x:sz,y:q},{x:3*q,y:q}],
-    // H4: right center trapezoid
-    [{x:sz,y:q},{x:sz,y:3*q},{x:3*q,y:3*q},{x:3*q,y:q}],
-    // H5: right lower triangle
-    [{x:sz,y:3*q},{x:sz,y:sz},{x:3*q,y:3*q}],
-    // H6: lower right triangle
-    [{x:sz,y:sz},{x:3*q,y:sz},{x:3*q,y:3*q}],
-    // H7: bottom center trapezoid
-    [{x:3*q,y:sz},{x:q,y:sz},{x:q,y:3*q},{x:3*q,y:3*q}],
-    // H8: lower left triangle
-    [{x:q,y:sz},{x:0,y:sz},{x:q,y:3*q}],
-    // H9: left lower triangle
-    [{x:0,y:sz},{x:0,y:3*q},{x:q,y:3*q}],
-    // H10: left center trapezoid
-    [{x:0,y:3*q},{x:0,y:q},{x:q,y:q},{x:q,y:3*q}],
-    // H11: left upper triangle
-    [{x:0,y:q},{x:0,y:0},{x:q,y:q}],
-    // H12: upper left triangle
-    [{x:0,y:0},{x:q,y:0},{x:q,y:q}],
+    { poly:[TM,a,C,b],  kind:'kite',   cx:h,      cy:q,        num:[h, h-26]      }, // 1
+    { poly:[TL,TM,a],   kind:'top',    cx:q,      cy:20,       num:[q, q-22]      }, // 2
+    { poly:[TL,a,ML],   kind:'side',   cx:40,     cy:q,        num:[q-22, q]      }, // 3
+    { poly:[ML,a,C,d],  kind:'kite',   cx:q,      cy:h,        num:[h-26, h]      }, // 4
+    { poly:[ML,d,BL],   kind:'side',   cx:40,     cy:3*q,      num:[q-22, 3*q]    }, // 5
+    { poly:[BL,d,BM],   kind:'bottom', cx:q,      cy:sz-20,    num:[q, 3*q+22]    }, // 6
+    { poly:[BM,c,C,d],  kind:'kite',   cx:h,      cy:3*q,      num:[h, h+26]      }, // 7
+    { poly:[BM,c,BR],   kind:'bottom', cx:3*q,    cy:sz-20,    num:[3*q, 3*q+22]  }, // 8
+    { poly:[BR,c,MR],   kind:'side',   cx:sz-40,  cy:3*q,      num:[3*q+22, 3*q]  }, // 9
+    { poly:[MR,c,C,b],  kind:'kite',   cx:3*q,    cy:h,        num:[h+26, h]      }, // 10
+    { poly:[MR,b,TR],   kind:'side',   cx:sz-40,  cy:q,        num:[3*q+22, q]    }, // 11
+    { poly:[TR,b,TM],   kind:'top',    cx:3*q,    cy:20,       num:[3*q, q-22]    }, // 12
   ];
 }
 
-function polyPts(poly) {
-  return poly.map(p => `${p.x},${p.y}`).join(' ');
-}
-
-function polyCentroid(poly) {
-  const n = poly.length;
-  let cx = 0, cy = 0;
-  poly.forEach(p => { cx += p.x; cy += p.y; });
-  return { x: cx/n, y: cy/n };
+// Positions for n planet labels inside a house
+function planetSlots(L, n) {
+  const slots = [];
+  const lh = n > 5 ? 12 : 14;                 // line height
+  if (L.kind === 'kite' || L.kind === 'side') {
+    // vertical stack centred on the anchor; two columns in kites if crowded
+    const cols = (L.kind === 'kite' && n > 4) ? 2 : 1;
+    const rows = Math.ceil(n / cols);
+    for (let i = 0; i < n; i++) {
+      const col = cols === 2 ? (i % 2) : 0, row = cols === 2 ? Math.floor(i / 2) : i;
+      slots.push({
+        x: L.cx + (cols === 2 ? (col === 0 ? -30 : 30) : 0),
+        y: L.cy + (row - (rows - 1) / 2) * lh,
+      });
+    }
+  } else {
+    // edge triangles: rows grow away from the wide edge, two columns when >2
+    const cols = n > 2 ? 2 : 1;
+    const dir = L.kind === 'top' ? 1 : -1;
+    for (let i = 0; i < n; i++) {
+      const col = cols === 2 ? (i % 2) : 0, row = cols === 2 ? Math.floor(i / 2) : i;
+      slots.push({
+        x: L.cx + (cols === 2 ? (col === 0 ? -30 : 30) : 0),
+        y: L.cy + dir * row * lh,
+      });
+    }
+  }
+  return slots;
 }
 
 function drawKundali(houseData, planets) {
   const svg = document.getElementById('kundaliSVG');
   svg.innerHTML = '';
-  const sz = 460;
-  const polys = buildHousePolygons(sz);
-
+  const sz = KUNDALI_SZ;
   const ns = 'http://www.w3.org/2000/svg';
+  const layout = buildHouseLayout(sz);
+
+  const el = (tag, attrs, text) => {
+    const n = document.createElementNS(ns, tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (text !== undefined) n.textContent = text;
+    svg.appendChild(n);
+    return n;
+  };
 
   // Background
-  const bg = document.createElementNS(ns, 'rect');
-  bg.setAttribute('width', sz); bg.setAttribute('height', sz);
-  bg.setAttribute('fill', '#14100A');
-  bg.setAttribute('rx', '2');
-  svg.appendChild(bg);
+  el('rect', { width:sz, height:sz, fill:'#14100A', rx:2 });
 
-  // Draw each house
-  polys.forEach((poly, i) => {
-    const hNum = i + 1;
-    const hSign = houseData[i].sign;
-    const hPlanets = houseData[i].planets;
+  // House cells (fill + hover tooltip)
+  layout.forEach((L, i) => {
+    const hd = houseData[i];
+    const p = el('polygon', {
+      points: L.poly.map(pt => pt.join(',')).join(' '),
+      fill: i === 0 ? 'rgba(210,170,80,0.08)' : 'rgba(255,255,255,0.012)',
+      stroke: 'none',
+    });
+    const t = document.createElementNS(ns, 'title');
+    t.textContent = `House ${i+1} · ${hd.sign} (${SAN_SIGN[hd.signIdx]}) · Lord ${hd.lord}` +
+      (hd.planets.length ? ' · ' + hd.planets.map(pl => pl.name).join(', ') : '');
+    p.appendChild(t);
+  });
 
-    // Polygon fill
-    const p = document.createElementNS(ns, 'polygon');
-    p.setAttribute('points', polyPts(poly));
-    // H1 gets highlighted fill
-    p.setAttribute('fill', hNum === 1 ? 'rgba(210,170,80,0.07)' : 'rgba(255,255,255,0.015)');
-    p.setAttribute('stroke', 'rgba(210,170,80,0.25)');
-    p.setAttribute('stroke-width', '1');
-    svg.appendChild(p);
+  // Chart lines: outer square, both diagonals, inner diamond
+  const line = (x1, y1, x2, y2) => el('line', { x1, y1, x2, y2,
+    stroke:'rgba(210,170,80,0.45)', 'stroke-width':1.2, 'stroke-linecap':'round' });
+  line(0, 0, sz, sz);
+  line(sz, 0, 0, sz);
+  el('polygon', { points:`${sz/2},0 ${sz},${sz/2} ${sz/2},${sz} 0,${sz/2}`,
+    fill:'none', stroke:'rgba(210,170,80,0.45)', 'stroke-width':1.2, 'stroke-linejoin':'round' });
+  el('rect', { x:0.75, y:0.75, width:sz-1.5, height:sz-1.5, fill:'none',
+    stroke:'rgba(210,170,80,0.6)', 'stroke-width':1.5, rx:2 });
 
-    const cen = polyCentroid(poly);
+  // Sign numbers + planets
+  layout.forEach((L, i) => {
+    const hd = houseData[i];
 
-    // Sign number (top)
-    const signIdx = RASHIS.indexOf(hSign);
-    const signLabel = document.createElementNS(ns, 'text');
-    signLabel.setAttribute('x', cen.x);
-    signLabel.setAttribute('y', cen.y - 10);
-    signLabel.setAttribute('text-anchor', 'middle');
-    signLabel.setAttribute('dominant-baseline', 'middle');
-    signLabel.setAttribute('font-family', 'DM Mono, monospace');
-    signLabel.setAttribute('font-size', i===0||i===3||i===6||i===9 ? '11' : '9');
-    signLabel.setAttribute('fill', hNum === 1 ? 'rgba(210,170,80,0.9)' : 'rgba(210,170,80,0.5)');
-    signLabel.textContent = RASHI_SAN[signIdx] || RASHI_SHORT[signIdx];
-    svg.appendChild(signLabel);
+    el('text', {
+      x: L.num[0], y: L.num[1], 'text-anchor':'middle', 'dominant-baseline':'central',
+      'font-family':'DM Mono, monospace', 'font-size': 13,
+      fill: i === 0 ? 'rgba(230,190,90,0.95)' : 'rgba(210,170,80,0.6)',
+    }, chartNumMode === 'sign' ? hd.signIdx + 1 : i + 1);
 
-    // House number (small)
-    const hLabel = document.createElementNS(ns, 'text');
-    hLabel.setAttribute('x', cen.x);
-    hLabel.setAttribute('y', cen.y + 8);
-    hLabel.setAttribute('text-anchor', 'middle');
-    hLabel.setAttribute('dominant-baseline', 'middle');
-    hLabel.setAttribute('font-family', 'DM Mono, monospace');
-    hLabel.setAttribute('font-size', '8');
-    hLabel.setAttribute('fill', 'rgba(160,144,112,0.35)');
-    hLabel.textContent = hNum;
-    svg.appendChild(hLabel);
-
-    // Planets
-    if (hPlanets.length > 0) {
-      const lineHeight = 13;
-      const startY = cen.y + 20;
-      hPlanets.forEach((pl, j) => {
-        const pt = document.createElementNS(ns, 'text');
-        pt.setAttribute('x', cen.x);
-        pt.setAttribute('y', startY + j * lineHeight);
-        pt.setAttribute('text-anchor', 'middle');
-        pt.setAttribute('dominant-baseline', 'middle');
-        pt.setAttribute('font-family', 'Crimson Pro, serif');
-        pt.setAttribute('font-size', '12');
-        pt.setAttribute('fill', PLANET_COLORS[pl.name] || '#E8D8B0');
-        pt.setAttribute('font-weight', '600');
-        pt.textContent = (PLANET_SYMBOLS[pl.name]||pl.name.slice(0,2)) + (pl.retro ? '℞' : '');
-        svg.appendChild(pt);
+    const pls = hd.planets;
+    const slots = planetSlots(L, pls.length);
+    const fs = pls.length > 5 ? 11 : 13.5;
+    pls.forEach((pl, j) => {
+      const deg = Math.floor(parseFloat(pl.degInSign));
+      const isNode = pl.name === 'Rahu' || pl.name === 'Ketu';
+      const txt = el('text', {
+        x: slots[j].x, y: slots[j].y, 'text-anchor':'middle', 'dominant-baseline':'central',
+        'font-family':'Crimson Pro, serif', 'font-size': fs, 'font-weight':600,
+        fill: PLANET_COLORS[pl.name] || '#E8D8B0',
       });
-    }
+      txt.appendChild(document.createTextNode(PLANET_ABBR[pl.name] || pl.name.slice(0,2)));
+      if (pl.retro && !isNode) {
+        const r = document.createElementNS(ns, 'tspan');
+        r.setAttribute('font-size', fs - 3);
+        r.setAttribute('dy', '-0.35em');
+        r.textContent = '℞';
+        txt.appendChild(r);
+      }
+      const dg = document.createElementNS(ns, 'tspan');
+      if (pl.retro && !isNode) dg.setAttribute('dy', '0.35em');
+      dg.setAttribute('font-size', fs - 2);
+      dg.setAttribute('font-weight', 400);
+      dg.setAttribute('fill-opacity', 0.75);
+      dg.textContent = ` ${deg}°`;
+      txt.appendChild(dg);
+    });
   });
 
-  // Center diamond decorative lines
-  const q = sz/4;
-  const lines = [
-    [{x:q,y:0},{x:0,y:q}],   // diagonal: connects H12 corner to H11 start
-    [{x:3*q,y:0},{x:sz,y:q}],
-    [{x:sz,y:3*q},{x:3*q,y:sz}],
-    [{x:0,y:3*q},{x:q,y:sz}],
-    // inner diagonals
-    [{x:q,y:q},{x:3*q,y:q}],
-    [{x:3*q,y:q},{x:3*q,y:3*q}],
-    [{x:3*q,y:3*q},{x:q,y:3*q}],
-    [{x:q,y:3*q},{x:q,y:q}],
-  ];
-  lines.forEach(ln => {
-    const l = document.createElementNS(ns, 'line');
-    l.setAttribute('x1',ln[0].x); l.setAttribute('y1',ln[0].y);
-    l.setAttribute('x2',ln[1].x); l.setAttribute('y2',ln[1].y);
-    l.setAttribute('stroke','rgba(210,170,80,0.18)');
-    l.setAttribute('stroke-width','1');
-    svg.appendChild(l);
-  });
-
-  // Outer border
-  const border = document.createElementNS(ns, 'rect');
-  border.setAttribute('width', sz); border.setAttribute('height', sz);
-  border.setAttribute('fill', 'none');
-  border.setAttribute('stroke', 'rgba(210,170,80,0.35)');
-  border.setAttribute('stroke-width', '1.5');
-  border.setAttribute('rx', '2');
-  svg.appendChild(border);
-
-  // "Lagna" label in H1
-  const lagnaText = document.createElementNS(ns, 'text');
-  const c1 = polyCentroid(polys[0]);
-  lagnaText.setAttribute('x', c1.x);
-  lagnaText.setAttribute('y', c1.y - 24);
-  lagnaText.setAttribute('text-anchor', 'middle');
-  lagnaText.setAttribute('font-family', 'IM Fell English, serif');
-  lagnaText.setAttribute('font-size', '9');
-  lagnaText.setAttribute('fill', 'rgba(210,170,80,0.6)');
-  lagnaText.setAttribute('letter-spacing', '2');
-  lagnaText.textContent = 'LAGNA';
-  svg.appendChild(lagnaText);
+  // "Asc" marker in the Lagna house
+  el('text', {
+    x: sz/2, y: 30, 'text-anchor':'middle',
+    'font-family':'IM Fell English, serif', 'font-size': 10,
+    fill:'rgba(210,170,80,0.65)', 'letter-spacing': 2,
+  }, 'LAGNA');
 }
 
 // ══════════════════════════════════════════════
@@ -1411,6 +1367,11 @@ async function generate() {
       `${dy.toString().padStart(2,'0')}/${mo.toString().padStart(2,'0')}/${yr} · ${hr.toString().padStart(2,'0')}:${mn.toString().padStart(2,'0')} · ${geoInfo.label} · UTC${utcOff >= 0 ? '+' : ''}${utcOff}`;
 
     // Draw chart
+    lastChart = {
+      houseData, planets: planetList, name, dob,
+      details: `${dy.toString().padStart(2,'0')}/${mo.toString().padStart(2,'0')}/${yr} · ${hr.toString().padStart(2,'0')}:${mn.toString().padStart(2,'0')} · ${geoInfo.label}`,
+      summary: `Lagna ${RASHIS[ascSign]} · Moon ${RASHIS[signOf(moonS)]} (${moonNk.name} ${moonNk.pada}) · Sun ${RASHIS[signOf(sunS)]}`,
+    };
     drawKundali(houseData, planetList);
 
     // Lagna info
@@ -1497,11 +1458,84 @@ function showErr(msg) {
 }
 
 function reset() {
+  lastChart = null;
   document.getElementById('results').style.display = 'none';
   document.getElementById('errBox').classList.remove('on');
   geoInfo = null;
   ['pname','dob','tob','place'].forEach(id => document.getElementById(id).value = '');
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ══════════════════════════════════════════════
+//  CHART NUMBER MODE + DOWNLOAD
+// ══════════════════════════════════════════════
+
+let lastChart = null;          // set by generate(); used to redraw and to export
+let chartNumMode = 'house';    // 'house' → 1–12 from Lagna, 'sign' → rashi number (1 = Aries)
+
+function setNumMode(mode) {
+  chartNumMode = mode;
+  document.querySelectorAll('.num-toggle button').forEach(b =>
+    b.classList.toggle('active', b.dataset.mode === mode));
+  if (lastChart) drawKundali(lastChart.houseData, lastChart.planets);
+}
+
+async function downloadKundli() {
+  if (!lastChart) return;
+  const btn = document.getElementById('dlBtn');
+  const label = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Preparing…';
+  try {
+    // Chart SVG → image
+    const clone = document.getElementById('kundaliSVG').cloneNode(true);
+    clone.setAttribute('width', 1000); clone.setAttribute('height', 1000);
+    clone.querySelectorAll('title').forEach(t => t.remove());
+    const xml = new XMLSerializer().serializeToString(clone);
+    const img = new Image();
+    await new Promise((res, rej) => {
+      img.onload = res; img.onerror = rej;
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(xml);
+    });
+    if (document.fonts && document.fonts.ready) await document.fonts.ready;
+
+    const W = 1200, chartSz = 1000, top = 210, H = top + chartSz + 260;
+    const cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    const ctx = cv.getContext('2d');
+    ctx.fillStyle = '#0E0B07'; ctx.fillRect(0, 0, W, H);
+    ctx.textAlign = 'center';
+    // draw centred text, shrinking the font until it fits the width
+    const fitText = (txt, y, px, family, color) => {
+      ctx.fillStyle = color;
+      do { ctx.font = `${px}px ${family}`; px -= 1; } while (ctx.measureText(txt).width > W - 80 && px > 10);
+      ctx.fillText(txt, W/2, y);
+    };
+
+    fitText(lastChart.name, 105, 64, '"IM Fell English", serif', '#F5E4B0');
+    fitText(lastChart.details.toUpperCase(), 160, 22, '"DM Mono", monospace', '#A09070');
+
+    ctx.drawImage(img, (W - chartSz)/2, top, chartSz, chartSz);
+
+    const y0 = top + chartSz;
+    fitText(lastChart.summary, y0 + 70, 32, '"Crimson Pro", serif', '#E8D8B0');
+    fitText('Su Sun · Mo Moon · Ma Mars · Me Mercury · Ju Jupiter', y0 + 125, 20, '"DM Mono", monospace', '#A09070');
+    fitText('Ve Venus · Sa Saturn · Ra Rahu · Ke Ketu · ℞ Retrograde', y0 + 157, 20, '"DM Mono", monospace', '#A09070');
+    fitText((chartNumMode === 'house'
+      ? 'North Indian chart · numbers are houses (1 = Lagna)'
+      : 'North Indian chart · numbers are signs (1 = Aries)') + ' · Lahiri ayanamsa', y0 + 215, 18, '"DM Mono", monospace', '#60503A');
+
+    const blob = await new Promise(res => cv.toBlob(res, 'image/png'));
+    const a = document.createElement('a');
+    const safe = lastChart.name.replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-') || 'Native';
+    a.download = `Kundli-${safe}-${lastChart.dob}.png`;
+    a.href = URL.createObjectURL(blob);
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  } catch (e) {
+    showErr('Could not create the image. Please try again.');
+  } finally {
+    btn.disabled = false; btn.textContent = label;
+  }
 }
 
 
