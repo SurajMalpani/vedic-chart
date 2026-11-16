@@ -396,6 +396,16 @@ h1 span { color: var(--gold); font-style: italic; }
 .p-house { color: var(--gold-dim); font-size: 0.72rem; font-family: 'DM Mono', monospace; text-align: right; }
 .p-retro { color: var(--rust); font-size: 0.65rem; margin-left: 2px; }
 
+/* Jyotishi's notes */
+.notes-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+@media (max-width: 760px) { .notes-grid { grid-template-columns: 1fr; } }
+.note { border-left: 2px solid var(--border2); padding: 0.2rem 0 0.2rem 0.9rem; }
+.note-k { font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold-dim); }
+.note-h { font-size: 1.02rem; color: var(--gold-pale); margin: 2px 0 4px; }
+.note-h .dev { font-size: 0.85rem; color: var(--gold-dim); margin-left: 4px; }
+.note p { font-size: 0.88rem; line-height: 1.55; color: var(--text-dim); font-style: italic; }
+.notes-foot { margin-top: 0.9rem; font-size: 0.72rem; color: var(--text-faint); }
+
 /* Lagna info */
 .lagna-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.85rem; }
 .lagna-label { color: var(--text-dim); }
@@ -643,6 +653,13 @@ footer {
       </div>
     </div>
 
+    <!-- Jyotishi's notes -->
+    <div class="card" style="margin-top:1.5rem">
+      <div class="panel-title">Jyotishi's Notes · A brief reading</div>
+      <div class="notes-grid" id="notesGrid"></div>
+      <div class="notes-foot">Traditional, general indications from the signs alone. A full reading weighs the whole chart.</div>
+    </div>
+
     <!-- Reference accordion -->
     <div class="card" style="margin-top:1.5rem">
       <div class="ref-section">
@@ -727,6 +744,55 @@ const NAMA_AKSHAR = [
   [["De","दे"], ["Do","दो"], ["Cha","चा"], ["Chi","ची"]]
 ];
 const namaAkshar = nk => NAMA_AKSHAR[nk.idx][nk.pada - 1];
+
+// Jyotishi's notes: brief traditional readings by sign (Aries … Pisces)
+const READ_LAGNA = [
+  "A pioneering spirit marks your path. You meet life head-on, quick to begin and slow to wait; courage is your gift, patience your lesson.",
+  "A steady, grounded presence. You are drawn to beauty, comfort and things built to last; once set on a course, few can move you.",
+  "A curious, quick-witted nature. You meet the world through words and ideas, and life rarely lets you stay in one place for long.",
+  "A protective, intuitive nature. Others sense your warmth before they know your name; home and belonging shape your journey.",
+  "A natural dignity surrounds you. You are noticed even when you do not seek it, and you carry a generous heart that likes to lead.",
+  "A discerning, careful nature. You notice what others miss and find meaning in service, order and quietly getting things right.",
+  "A graceful, diplomatic presence. You seek balance and fairness, and your path unfolds through partnership and harmony.",
+  "An intense, private strength. You see beneath the surface of things, and your life moves through deep transformations.",
+  "An optimistic, seeking nature. Faith, learning and far horizons call to you; you are both student and teacher of dharma.",
+  "A patient, ambitious nature. You build slowly and surely, and recognition tends to arrive with time and effort.",
+  "An independent, original mind. You think beyond your time and are drawn to causes larger than yourself.",
+  "A gentle, imaginative soul. Compassion and intuition guide you; the unseen world is never far from your thoughts."
+];
+const READ_MOON = [
+  "The mind is quick and fiery. Feelings rise fast and pass fast; you are happiest when there is something new to begin.",
+  "The Moon is exalted here. The mind is calm, sensual and content; stability and simple pleasures bring you peace.",
+  "A restless, inquisitive mind. Conversation and learning nourish you, though the heart may weigh many options at once.",
+  "The Moon is at home here. Deep feeling, strong memory and a nurturing heart; mother and home carry great meaning.",
+  "A proud and warm heart. You need to feel valued, and you give loyalty and affection generously in return.",
+  "An analytical, attentive mind. You find calm in order and usefulness, though worry can visit when things feel unsettled.",
+  "A mind that seeks harmony. Relationships and beauty soothe you; discord affects you more than you show.",
+  "The Moon is debilitated here, giving emotions great depth. You feel intensely and privately, and emerge stronger from each trial.",
+  "A hopeful, philosophical mind. Freedom, travel and higher learning lift your spirits; you look for meaning in all things.",
+  "A disciplined, reserved mind. You keep feelings measured and find security through responsibility and achievement.",
+  "A detached yet humane mind. You care for the many, value friendship and need space to think in your own way.",
+  "A dreamy, empathic mind. You absorb the moods around you; devotion, music and solitude restore you."
+];
+const READ_SUN = [
+  "The Sun is exalted here. The soul is bold and self-assured, with strong vitality and a natural will to lead.",
+  "The soul seeks steadiness and worth. You shine through persistence and the value you build over time.",
+  "The soul expresses itself through intellect and communication. Your light shows in ideas, words and versatility.",
+  "The soul is tied to roots and care. You shine brightest when protecting and nurturing those close to you.",
+  "The Sun is in its own sign. Confidence, generosity and a regal bearing come naturally; you are meant to be seen.",
+  "The soul shines through skill and service. You earn respect by being precise, capable and dependable.",
+  "The Sun is debilitated here, so the self grows through others. Cooperation and fairness become your path to strength.",
+  "The soul has depth and resolve. You hold power quietly and are drawn to hidden knowledge and renewal.",
+  "The soul is guided by dharma. Wisdom, teachers and a higher purpose give your life its direction.",
+  "The soul is earnest and enduring. Duty and hard work bring honour, often later in life.",
+  "The soul seeks a larger purpose. You shine in service of community, and by thinking differently.",
+  "The soul is spiritual and giving. Your light is gentle, found in compassion, faith and quiet wisdom."
+];
+const readings = (asc, moon, sun) => [
+  { k: 'Lagna', title: 'Your nature and path', sanskrit: 'Lagna', dev: 'लग्न', sign: asc, text: READ_LAGNA[asc] },
+  { k: 'Moon', title: 'Your mind and heart', sanskrit: 'Chandra', dev: 'चन्द्र', sign: moon, text: READ_MOON[moon] },
+  { k: 'Sun', title: 'Your soul and purpose', sanskrit: 'Surya', dev: 'सूर्य', sign: sun, text: READ_SUN[sun] },
+];
 
 const HOUSE_MEANINGS = [
   "Self, body, personality",
@@ -893,9 +959,18 @@ if (document.readyState === 'loading') {
   setupAC();
 }
 
+function placeMain(p) {
+  const a = p.address || {};
+  return a.city || a.town || a.village || a.municipality || a.county || p.display_name.split(',')[0];
+}
+function placeLabel(p) {
+  const a = p.address || {};
+  return [placeMain(p), a.state, a.country].filter(Boolean).join(', ');
+}
+
 async function fetchGeo(q, inp, list) {
   // Nominatim: works from all real browsers (no forbidden headers needed)
-  const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=6&addressdetails=1&extratags=1&q=' + encodeURIComponent(q);
+  const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=12&addressdetails=1&extratags=1&q=' + encodeURIComponent(q);
   try {
     const res  = await fetch(url);
     const data = await res.json();
@@ -904,10 +979,14 @@ async function fetchGeo(q, inp, list) {
       list.innerHTML = '<div class="ac-hint">No places found — try a different spelling.</div>';
       return;
     }
-    data.forEach(function(p) {
-      const main = p.address.city || p.address.town || p.address.village ||
-                   p.address.municipality || p.address.county ||
-                   p.display_name.split(',')[0];
+    // Nominatim often returns the same town twice (e.g. the city node and its boundary): keep one per label.
+    const seen = new Set();
+    data.filter(function(p) {
+      const key = placeLabel(p).toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key); return true;
+    }).slice(0, 6).forEach(function(p) {
+      const main = placeMain(p);
       const sub  = [p.address.state, p.address.country].filter(Boolean).join(', ');
       const row  = document.createElement('div');
       row.className = 'ac-row';
@@ -1523,6 +1602,14 @@ async function generate() {
       lrow('Sun Sign', SD('Surya Rashi', 'सूर्य राशि'), sunSign, SD(SAN_SIGN[sunSidx], DEV_SIGN[sunSidx])) +
       lrow('Western Sun Sign', '<span class="san">Tropical zodiac</span>', RASHIS[westIdx], SD('', DEV_SIGN[westIdx]), true);
 
+    // Jyotishi's notes
+    document.getElementById('notesGrid').innerHTML = readings(ascSign, moonSign, sunSidx).map(r => `
+      <div class="note">
+        <div class="note-k">${r.sanskrit} · ${r.title}</div>
+        <div class="note-h">${r.k} in ${RASHIS[r.sign]}<span class="dev">${DEV_SIGN[r.sign]}</span></div>
+        <p>${r.text}</p>
+      </div>`).join('');
+
     // Panchang
     const pakshaKey = moonSunDiff < 180 ? 'Shukla' : 'Krishna';
     const pcell = (label, san, value, valueSan) =>
@@ -2026,6 +2113,20 @@ function buildKundliPDF(jsPDF, chartImg) {
       : '-',
     HOUSE_MEANINGS[i],
   ]), y);
+
+  y += 12;
+  y = sectionTitle("Jyotishi's Notes", 'फलादेश', 'a brief reading', y);
+  readings(C.ascSign, C.moonSign, C.sunSign).forEach(r => {
+    run([{ t: `${r.k} in ${RASHIS[r.sign]}`, s: 'bold', z: 11 }, { d: DEV_SIGN[r.sign], z: 10 },
+         { t: `${r.sanskrit} \xB7 ${r.title}`, s: 'italic', z: 9.5, c: GOLD }], M + 4, y);
+    font('times', 'italic', 10); col(DIM);
+    const lines = doc.splitTextToSize(t(r.text), W - 2 * M - 6);
+    doc.text(lines, M + 4, y + 5.5);
+    doc.setDrawColor(...LINE); doc.setLineWidth(0.6); doc.setDrawColor(...GOLD); doc.line(M + 0.5, y - 3.5, M + 0.5, y + 2 + lines.length * 4.4);
+    y += 10 + lines.length * 4.4;
+  });
+  font('times', 'italic', 7.8); col(FAINT);
+  doc.text('Traditional, general indications from the signs alone. A full reading weighs the whole chart.', M, y);
   footer();
 
   // ── PAGE 4: Vimshottari dasha ──
