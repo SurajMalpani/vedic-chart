@@ -1,0 +1,24 @@
+# Vedic Kundali: Birth Chart Generator
+
+> A free online Vedic birth chart (Janam Kundli) generator. Enter birth date, time, and place to get a North Indian style kundli with Lagna, planetary positions, nakshatras, and Vimshottari dasha periods.
+
+Live: https://kundli.vayuputra.co/
+
+## Features
+
+- North Indian style birth chart (Rashi chart)
+- Ascendant (Lagna), planets in signs and houses, and nakshatras
+- Vimshottari dasha periods
+- Lahiri ayanamsa (sidereal zodiac)
+- Download the chart as a PDF or image
+
+## Useful for
+
+- Making a Janam Kundli from birth details
+- Checking Lagna, Moon sign, and nakshatra
+- Looking up current and upcoming dasha periods
+
+## About
+
+- Free, no sign-up, nothing to install; runs entirely in your browser.
+- Made by [Suraj Malpani](https://surajmalpani.github.io/), published by [Vayuputra](https://vayuputra.co/), which lists all its free tools.
